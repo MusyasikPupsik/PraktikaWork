@@ -1,21 +1,14 @@
-from app.db.db import SessionLocal
-from app.db import crud
+from fastapi import FastAPI
+from app.api import books, categories
+from app.db.db import engine, Base
 
-def display_data():
-    db = SessionLocal()
-    try:
-        print("=== CATEGORIES ===")
-        categories = crud.get_categories(db)
-        for cat in categories:
-            print(f"ID: {cat.id} | Title: {cat.title}")
-            
-        print("\n=== BOOKS IN DATABASE ===")
-        books = crud.get_books(db)
-        for book in books:
-            print(f"[{book.category.title}] '{book.title}' - ${book.price:.2f} (Description: {book.description})")
-            
-    finally:
-        db.close()
+Base.metadata.create_all(bind=engine)
 
-if __name__ == "__main__":
-    display_data()
+app = FastAPI(title="Octagon Book API")
+
+app.include_router(categories.router)
+app.include_router(books.router)
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
